@@ -1,0 +1,14 @@
+#!/bin/bash
+# Serve the agenda page on loopback; expose it with `tailscale serve --bg --https=10480 http://127.0.0.1:6110`.
+# Settings come from ~/.config/agenda/env (see agenda/settings.py). If AGENDA_DOPPLER names "project/config",
+# the page runs under `doppler run` so ELEVENLABS_API_KEY never touches disk.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+ENV_FILE="${AGENDA_ENV:-${XDG_CONFIG_HOME:-$HOME/.config}/agenda/env}"
+if [[ -f $ENV_FILE ]]; then set -a; . "$ENV_FILE"; set +a; fi
+cd "$ROOT"
+if [[ -n ${AGENDA_DOPPLER:-} ]]; then
+  exec "$(command -v doppler || echo "$HOME/.local/bin/doppler")" run --project "${AGENDA_DOPPLER%%/*}" \
+    --config "${AGENDA_DOPPLER#*/}" -- /usr/bin/python3 -m agenda.web "$@"
+fi
+exec /usr/bin/python3 -m agenda.web "$@"

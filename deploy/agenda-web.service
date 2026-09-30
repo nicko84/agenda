@@ -1,0 +1,12 @@
+[Unit]
+Description=Agenda web page (loopback; exposed on the tailnet by tailscale serve)
+After=network.target
+
+[Service]
+# Settings (owner login, mail, Doppler configs) come from ~/.config/agenda/env; see agenda/settings.py.
+ExecStart=%h/dev/agenda/bin/agenda-web --port 6110
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

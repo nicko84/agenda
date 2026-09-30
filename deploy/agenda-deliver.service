@@ -1,0 +1,11 @@
+[Unit]
+Description=Agenda delivery: nudge idle herdr sessions that have agenda news
+After=network.target
+
+[Service]
+ExecStart=%h/dev/agenda/bin/agenda-deliver --interval 15
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

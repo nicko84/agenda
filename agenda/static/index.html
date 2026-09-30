@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agenda</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='5' width='24' height='22' rx='5' fill='%232f5bd3'/%3E%3Cpath d='M10 13h12M10 19h8' stroke='white' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f5f4f0; --surface: #ffffff; --raised: #fbfaf7; --ink: #1b1a17; --muted: #6a675f; --faint: #9a968c;
+  --line: #e4e1d9; --chip: #efede7; --accent: #2f5bd3; --accent-ink: #ffffff; --accent-soft: #e7edfc;
+  --danger: #b3261e; --danger-soft: #fbe9e7; --ok: #1d7a4b; --ok-soft: #e4f3ea; --warn: #8a5a00; --warn-soft: #fbf1dc;
+  --shadow: 0 1px 2px rgb(0 0 0 / .05), 0 2px 10px rgb(0 0 0 / .04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131311; --surface: #1c1c19; --raised: #22221f; --ink: #ebe9e3; --muted: #a29f96; --faint: #75726a;
+    --line: #2f2e2a; --chip: #2a2925; --accent: #8aa8ff; --accent-ink: #0f1420; --accent-soft: #1f2940;
+    --danger: #ff8a80; --danger-soft: #3a1f1c; --ok: #72d4a2; --ok-soft: #173125; --warn: #f0c26a; --warn-soft: #34290f;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131311; --surface: #1c1c19; --raised: #22221f; --ink: #ebe9e3; --muted: #a29f96; --faint: #75726a;
+  --line: #2f2e2a; --chip: #2a2925; --accent: #8aa8ff; --accent-ink: #0f1420; --accent-soft: #1f2940;
+  --danger: #ff8a80; --danger-soft: #3a1f1c; --ok: #72d4a2; --ok-soft: #173125; --warn: #f0c26a; --warn-soft: #34290f;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
+body { font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-text-size-adjust: 100%; }
+main { max-width: 760px; margin: 0 auto; padding: 20px 16px 80px; }
+header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -.01em; }
+.meta { color: var(--muted); font-size: 13px; }
+.spacer { flex: 1; }
+.counts { display: flex; gap: 8px; flex-wrap: wrap; }
+.count { background: var(--chip); border-radius: 999px; padding: 2px 10px; font-size: 13px; color: var(--muted); }
+.count b { color: var(--ink); }
+.toolbar { display: flex; gap: 8px; margin-bottom: 18px; }
+input[type=search], textarea, select {
+  font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 9px 12px; width: 100%;
+}
+textarea { min-height: 72px; resize: vertical; }
+input:focus, textarea:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+button {
+  font: inherit; font-size: 14px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); padding: 6px 12px; cursor: pointer; white-space: nowrap;
+}
+button:hover { background: var(--raised); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button.primary:hover { filter: brightness(1.05); }
+button.quiet { border-color: transparent; background: transparent; color: var(--muted); }
+button:disabled { opacity: .5; cursor: default; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 28px 0 10px; font-weight: 600; }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px;
+  margin-bottom: 12px; box-shadow: var(--shadow);
+}
+.card.blocking { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); }
+.top { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.chip { background: var(--chip); border-radius: 6px; padding: 1px 7px; font-weight: 600; color: var(--ink); }
+.chip.blocking { background: var(--danger-soft); color: var(--danger); }
+.chip.task { background: var(--warn-soft); color: var(--warn); }
+.chip.ask { background: var(--accent-soft); color: var(--accent); }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.dot::before { content: "·"; margin-right: 6px; color: var(--faint); }
+.id { color: var(--faint); font-variant-numeric: tabular-nums; }
+h3 { font-size: 16.5px; margin: 6px 0 4px; line-height: 1.35; }
+.summary { margin: 0 0 6px; }
+.line { font-size: 14px; color: var(--muted); margin: 4px 0; }
+.line b { color: var(--ink); font-weight: 600; }
+.said { background: var(--raised); border-radius: 10px; padding: 8px 10px; margin: 8px 0 2px; font-size: 14px; }
+.said .who { font-size: 12.5px; color: var(--muted); margin-bottom: 2px; }
+.said .md p:first-child, .said .md ul:first-child, .said .md ol:first-child { margin-top: 0; }
+.said .md > :last-child { margin-bottom: 0; }
+.menu-items hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+.menu-items button.danger { color: var(--danger); }
+.when { display: block; text-align: right; font-size: 12.5px; color: var(--faint); margin-top: 4px; }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.reply { margin-top: 10px; display: none; }
+.reply.open { display: block; }
+.reply .row { display: flex; gap: 6px; margin-top: 6px; justify-content: flex-end; }
+.more { margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 10px; display: none; font-size: 14px; }
+.more.open { display: block; }
+.more h4 { font-size: 12.5px; color: var(--muted); margin: 10px 0 4px; font-weight: 600; }
+.md p { margin: 6px 0; }
+.md pre { background: var(--raised); padding: 8px 10px; border-radius: 8px; overflow-x: auto; font-size: 12.5px; }
+.md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; background: var(--chip); padding: 0 4px; border-radius: 4px; }
+.md pre code { background: none; padding: 0; }
+.md ul, .md ol { margin: 6px 0; padding-left: 22px; }
+.md a, a { color: var(--accent); }
+.thread { list-style: none; padding: 0; margin: 0; }
+.thread li { padding: 6px 0; border-bottom: 1px solid var(--line); }
+.thread li:last-child { border-bottom: 0; }
+.thread .who { font-size: 12.5px; color: var(--muted); }
+.thread li.system { color: var(--faint); font-size: 13px; }
+.compact { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.compact h3 { font-size: 15px; margin: 4px 0 2px; }
+.empty { color: var(--muted); background: var(--surface); border: 1px dashed var(--line); border-radius: 14px; padding: 18px; text-align: center; }
+details.group > summary { cursor: pointer; color: var(--muted); font-size: 13px; margin: 18px 0 10px; list-style: none; }
+details.group > summary::-webkit-details-marker { display: none; }
+.ask-box { display: none; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 16px; }
+.ask-box.open { display: block; }
+.ask-box .row { display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap; }
+.ask-box select { width: auto; }
+.ask-box label { font-size: 14px; color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--ink); color: var(--bg);
+  padding: 10px 14px; border-radius: 10px; font-size: 14px; max-width: min(92vw, 640px); display: none; z-index: 10; }
+.toast.show { display: block; }
+.menu { position: relative; display: inline-block; }
+.menu-items { display: none; position: absolute; top: 110%; left: 0; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: var(--shadow); padding: 4px; z-index: 5; min-width: 150px; }
+.menu.open .menu-items { display: block; }
+.menu-items button { display: block; width: 100%; text-align: left; border: 0; }
+.hidden { display: none !important; }
+.project { margin: 26px 0 8px; }
+.project h2 { margin: 0 0 4px; color: var(--ink); font-size: 15px; letter-spacing: .02em; text-transform: none; }
+.project .brief { color: var(--muted); font-size: 14px; margin: 0 0 10px; }
+.feature-title { font-size: 13px; font-weight: 600; color: var(--muted); margin: 14px 0 8px; }
+.feature-title .bucket { font-weight: 400; color: var(--faint); }
+.context { font-size: 14px; color: var(--muted); margin: 2px 0 6px; }
+.chip.quick { background: var(--ok-soft); color: var(--ok); }
+.shots { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 2px; }
+.shots img { height: 84px; border-radius: 8px; border: 1px solid var(--line); cursor: zoom-in; }
+.shots a { font-size: 13px; }
+.talk { background: var(--ok); color: var(--bg); border-color: var(--ok); font-weight: 600; }
+.card.speaking { outline: 2px solid var(--accent); outline-offset: 2px; }
+.callbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--surface); border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 20px rgb(0 0 0 / .08); padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); z-index: 8; display: none; }
+.callbar.open { display: block; }
+.callbar .inner { max-width: 760px; margin: 0 auto; }
+.callbar .row { display: flex; gap: 8px; align-items: center; }
+.callbar .state { font-weight: 600; }
+.callbar .state::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--faint); margin-right: 8px; }
+.callbar .state.listening::before { background: var(--ok); }
+.callbar .state.speaking::before { background: var(--accent); }
+.callbar .said-line { font-size: 14px; color: var(--muted); margin-top: 6px; max-height: 4.5em; overflow: hidden; }
+.callbar .said-line b { color: var(--ink); font-weight: 600; }
+main.in-call { padding-bottom: 150px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Agenda</h1>
+    <div class="counts" id="counts"></div>
+    <div class="spacer"></div>
+    <span class="meta" id="updated"></span>
+  </header>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Search items, sessions, topics…" autocomplete="off">
+    <button id="ask-toggle">Ask a session</button>
+    <button class="talk" id="talk">Talk</button>
+  </div>
+
+  <form class="ask-box" id="ask-box">
+    <textarea id="ask-text" placeholder="What do you want to ask, or have done?"></textarea>
+    <div class="row">
+      <select id="ask-to"></select>
+      <label><input type="checkbox" id="ask-instruction"> It's an instruction</label>
+      <div class="spacer"></div>
+      <button type="button" class="quiet" id="ask-cancel">Cancel</button>
+      <button type="submit" class="primary">Send</button>
+    </div>
+  </form>
+
+  <section>
+    <h2>For you</h2>
+    <div id="queue"></div>
+    <details class="group" id="deferred-group"><summary id="deferred-label"></summary><div id="deferred"></div></details>
+  </section>
+  <section>
+    <h2>With sessions</h2>
+    <div id="owed"></div>
+  </section>
+  <section>
+    <h2>Settled</h2>
+    <div id="history"></div>
+  </section>
+</main>
+<div class="callbar" id="callbar">
+  <div class="inner">
+    <div class="row">
+      <span class="state" id="call-state">Connecting…</span>
+      <div class="spacer"></div>
+      <button id="call-mute">Mute</button>
+      <button class="primary" id="call-end">End call</button>
+    </div>
+    <div class="said-line" id="call-said"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const open = new Set();          // item ids with details expanded
+const replying = new Set();      // item ids with the reply box open
+const drafts = new Map();        // item id -> unsent reply text
+let data = null;
+let speaking = null;       // item the voice agent is discussing
+
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+
+function ago(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m`;
+  if (mins < 48 * 60) return `${Math.floor(mins / 60)}h`;
+  return `${Math.floor(mins / 1440)}d`;
+}
+function clock(iso) {
+  const d = new Date(iso), today = new Date();
+  const time = d.toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"});
+  return d.toDateString() === today.toDateString() ? time : `${d.toLocaleDateString([], {weekday: "short", day: "numeric", month: "short"})} ${time}`;
+}
+function name(item, who) {
+  if (who === "nick") return "You";
+  if (who === "agenda") return "Agenda";
+  return item.names[who] || who.slice(0, 8);
+}
+
+// A small, safe markdown subset: escape first, then add structure.
+function md(text) {
+  const blocks = esc(text).split(/\n{2,}/);
+  return blocks.map((block) => {
+    if (/^```/.test(block)) return `<pre><code>${block.replace(/^```\w*\n?|```$/g, "")}</code></pre>`;
+    const lines = block.split("\n");
+    if (lines.every((l) => /^\s*[-*] /.test(l))) return `<ul>${lines.map((l) => `<li>${inline(l.replace(/^\s*[-*] /, ""))}</li>`).join("")}</ul>`;
+    if (lines.every((l) => /^\s*\d+[.)] /.test(l))) return `<ol>${lines.map((l) => `<li>${inline(l.replace(/^\s*\d+[.)] /, ""))}</li>`).join("")}</ol>`;
+    if (lines.length > 1 && lines.every((l) => /^\s*\|/.test(l))) return `<pre>${block}</pre>`;
+    if (/^#{1,4} /.test(block)) return `<p><b>${inline(block.replace(/^#+ /, ""))}</b></p>`;
+    return `<p>${inline(block).replace(/\n/g, "<br>")}</p>`;
+  }).join("");
+}
+function inline(s) {
+  return s
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+
+function nickReplied(item) { return item.messages.some((m) => m.author === "nick" && m.kind !== "question"); }
+function fromNick(item) { return item.raised_by === "nick"; }
+function deciding(item) {
+  // Nick's, the owner's or the agenda's latest word, as in the CLI; bystanders' notes are counted instead.
+  const spoken = item.messages.filter((m) => m.author !== "system");
+  const key = spoken.filter((m) => ["nick", "agenda", item.owner].includes(m.author));  // incl. Nick's questions
+  const main = key.at(-1);
+  const later = spoken.filter((m) => !main || m.id > main.id).length;
+  const skip = main && fromNick(item) && main === spoken[0];
+  return {main: skip ? null : main, later};
+}
+
+function chips(item) {
+  const kind = fromNick(item) ? `<span class="chip ask">your ${esc(item.kind)}</span>`
+    : item.blocking ? `<span class="chip blocking">blocking ${esc(item.kind)}</span>`
+    : `<span class="chip ${item.kind === "task" ? "task" : ""}">${esc(item.kind)}</span>`;
+  const since = item.waiting_since ? `<span class="dot">waiting ${ago(item.waiting_since)}</span>` : "";
+  const quick = item.quick && !nickReplied(item) ? `<span class="chip quick">quick sign-off</span>` : "";
+  return `<div class="top"><span class="id">#${item.id}</span>${kind}${quick}<span class="dot">${esc(item.owner_name)}</span>${item.lane ? `<span class="dot">${esc(item.lane)}</span>` : ""}${since}</div>`;
+}
+
+function said(item, m) {
+  const who = `${name(item, m.author)}${m.kind === "question" ? " asked" : ""}`;
+  return `<div class="said"><div class="who">${esc(who)} · ${ago(m.created_at)} ago</div><div class="md">${md(m.body)}</div></div>`;
+}
+
+function card(item) {
+  const {main, later} = deciding(item);
+  const canAck = !(item.kind === "task" && !nickReplied(item)) && !(!fromNick(item) && ["decision", "question"].includes(item.kind) && !nickReplied(item));
+  const lines = [];
+  if (!fromNick(item) && item.recommendation && !nickReplied(item)) lines.push(`<p class="line"><b>Recommends:</b> ${esc(item.recommendation)}</p>`);
+  if (item.default_option) lines.push(`<p class="line"><b>If no answer by ${clock(item.default_at)}:</b> ${esc(item.default_option)}</p>`);
+  const actions = [];
+  if (!fromNick(item) && item.recommendation && ["decision", "question"].includes(item.kind)) actions.push(`<button class="primary" data-act="accept" data-id="${item.id}">Accept</button>`);
+  actions.push(`<button data-reply="${item.id}">${fromNick(item) || nickReplied(item) ? "Reply" : "Answer"}</button>`);
+  if (item.kind === "task" && !nickReplied(item)) actions.push(`<button data-act="done" data-id="${item.id}">Done</button>`);
+  else if (canAck) actions.push(`<button data-act="ack" data-id="${item.id}">Heard it</button>`);
+  actions.push(`<span class="menu"><button data-menu>Later ▾</button><span class="menu-items">
+      <button data-act="defer" data-until="1h" data-id="${item.id}">In an hour</button>
+      <button data-act="defer" data-until="3h" data-id="${item.id}">In 3 hours</button>
+      <button data-act="defer" data-until="tomorrow" data-id="${item.id}">Tomorrow 8am</button>
+      <hr><button class="danger" data-act="drop" data-id="${item.id}">Drop it…</button></span></span>`);
+  if (item.attachments.length) actions.push(`<button data-shots="${item.id}">Email me the screenshots</button>`);
+  actions.push(`<button class="quiet" data-more="${item.id}">${open.has(item.id) ? "Hide details" : "Details"}</button>`);
+  return `<article class="card ${item.blocking ? "blocking" : ""} ${speaking === item.id ? "speaking" : ""}" data-item="${item.id}" data-search="${esc(searchText(item))}">
+    ${chips(item)}
+    <h3>${esc(item.title)}</h3>
+    ${item.context ? `<p class="context">${esc(item.context)}</p>` : ""}
+    ${item.summary !== item.title ? `<p class="summary">${esc(item.summary)}</p>` : ""}
+    ${lines.join("")}
+    ${shots(item)}
+    ${main ? said(item, main) : ""}
+    ${later ? `<p class="line">+${later} more on the thread</p>` : ""}
+    <div class="actions">${actions.join("")}</div>
+    <div class="reply ${replying.has(item.id) ? "open" : ""}" id="reply-${item.id}">
+      <textarea data-draft="${item.id}" placeholder="Answer, or ask ${esc(item.owner_name)} something first.">${esc(drafts.get(item.id) || "")}</textarea>
+      <div class="row"><button class="quiet" data-reply="${item.id}">Cancel</button><button data-act="question" data-id="${item.id}" title="Asks without deciding; the reply comes back to you">Ask a question</button><button class="primary" data-act="answer" data-id="${item.id}">Send answer</button></div>
+    </div>
+    ${more(item)}
+  </article>`;
+}
+
+function shots(item) {
+  if (!item.attachments.length) return "";
+  return `<div class="shots">${item.attachments.map((a) => a.url
+    ? `<a href="${esc(a.url)}" target="_blank" rel="noopener">${esc(a.url.replace(/^https?:\/\//, "").slice(0, 60))}</a>`
+    : (a.mime || "").startsWith("image/")
+      ? `<a href="/api/files/${a.id}" target="_blank"><img src="/api/files/${a.id}" alt="${esc(a.name)}" loading="lazy"></a>`
+      : `<a href="/api/files/${a.id}" target="_blank">${esc(a.name)}</a>`).join("")}</div>`;
+}
+
+function more(item) {
+  const parts = [];
+  if (item.options.length) parts.push(`<h4>Options</h4><ol>${item.options.map((o) => `<li>${esc(o)}</li>`).join("")}</ol>`);
+  if (item.detail) parts.push(`<h4>Detail</h4><div class="md">${md(item.detail)}</div>`);
+  if (item.briefing) parts.push(`<h4>Briefing</h4><div class="md">${md(item.briefing)}</div>`);
+  const watching = Object.keys(item.watchers).filter((s) => s !== item.owner).map((s) => name(item, s));
+  const facts = [`Raised by ${esc(name(item, item.raised_by))}, owned by ${esc(item.owner_name)}`];
+  if (watching.length) facts.push(`Watching: ${esc(watching.join(", "))}`);
+  if (item.topics.length) facts.push(`Topics: ${item.topics.map((t) => `<code>${esc(t)}</code>`).join(" ")}`);
+  if (item.outcome) facts.push(`Outcome: <b>${esc(item.outcome)}</b>${item.resolution ? ` — ${esc(item.resolution)}` : ""}`);
+  parts.push(`<h4>About</h4><p class="line">${facts.join("<br>")}</p>`);
+  if (item.messages.length) {
+    parts.push(`<h4>Thread</h4><ul class="thread">${item.messages.map((m) =>
+      `<li class="${m.author === "system" ? "system" : ""}"><div class="who">${esc(name(item, m.author))}${m.kind === "question" ? " asked" : ""} · ${clock(m.created_at)}</div><div class="md">${md(m.body)}</div></li>`).join("")}</ul>`);
+  }
+  return `<div class="more ${open.has(item.id) ? "open" : ""}">${parts.join("")}</div>`;
+}
+
+function compact(item, settled) {
+  const {main, later} = deciding(item);
+  const right = settled
+    ? `<span class="chip ${["answered", "done", "acknowledged"].includes(item.outcome) ? "ok" : ""}">${esc(item.outcome)}</span><span class="when">${item.closed_at ? clock(item.closed_at) : ""}</span>`
+    : `<span class="when">waiting ${item.waiting_since ? ago(item.waiting_since) : ""}</span>`;
+  const body = settled
+    ? (item.resolution ? `<p class="line">${esc(item.resolution)}</p>` : "")
+    : (main ? said(item, main) : "") + (later ? `<p class="line">+${later} more on the thread</p>` : "");
+  return `<article class="card ${speaking === item.id ? "speaking" : ""}" data-item="${item.id}" data-search="${esc(searchText(item))}">
+    <div class="compact"><div>${chips({...item, waiting_since: null})}<h3>${esc(item.title)}</h3></div><div>${right}</div></div>
+    ${body}
+    <div class="actions"><button class="quiet" data-more="${item.id}">${open.has(item.id) ? "Hide details" : "Details"}</button></div>
+    ${more(item)}
+  </article>`;
+}
+
+function searchText(item) {
+  return [item.title, item.summary, item.owner_name, item.kind, item.lane, ...item.topics, ...item.messages.map((m) => m.body)].join(" ").toLowerCase();
+}
+
+function render() {
+  if (!data) return;
+  const q = data.queue, d = data.deferred, o = data.owed, h = data.history;
+  $("counts").innerHTML = `<span class="count"><b>${q.length}</b> for you</span><span class="count"><b>${o.length}</b> with sessions</span>`;
+  const byId = new Map(q.map((i) => [i.id, i]));
+  $("queue").innerHTML = q.length ? data.plan.map((project) => `
+    <div class="project">
+      <h2>${esc(project.name)} <span class="meta">· ${project.features.reduce((n, f) => n + f.buckets.reduce((m, b) => m + b.ids.length, 0), 0)}</span></h2>
+      ${project.brief ? `<p class="brief">${esc(project.brief)}</p>` : ""}
+      ${project.features.map((f) => f.buckets.map((b, n) => `
+        <div class="feature-title">${n === 0 ? esc(f.name) + " · " : ""}<span class="bucket">${esc(b.title)}</span></div>
+        ${b.ids.map((id) => card(byId.get(id))).join("")}`).join("")).join("")}
+    </div>`).join("") : `<div class="empty">Nothing waiting on you.</div>`;
+  $("deferred-group").classList.toggle("hidden", !d.length);
+  $("deferred-label").textContent = `${d.length} deferred`;
+  $("deferred").innerHTML = d.map(card).join("");
+  $("owed").innerHTML = o.length ? o.map((i) => compact(i, false)).join("") : `<div class="empty">No session owes anything right now.</div>`;
+  $("history").innerHTML = h.length ? h.map((i) => compact(i, true)).join("") : `<div class="empty">Nothing settled yet.</div>`;
+  const to = $("ask-to"), current = to.value;
+  to.innerHTML = data.orchestrators.map((n) => `<option>${esc(n)}</option>`).join("") || `<option value="">No orchestrator registered</option>`;
+  if (current) to.value = current;
+  $("updated").textContent = `updated ${new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}`;
+  filter();
+}
+
+function filter() {
+  const q = $("search").value.trim().toLowerCase();
+  document.querySelectorAll("article.card").forEach((el) => el.classList.toggle("hidden", q && !el.dataset.search.includes(q)));
+}
+
+function toast(text) {
+  const t = $("toast"); t.textContent = text; t.classList.add("show");
+  clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 5000);
+}
+
+async function call(path, body) {
+  const res = await fetch(path, body === undefined ? {} : {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)});
+  const json = await res.json().catch(() => ({error: `HTTP ${res.status}`}));
+  if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+  return json;
+}
+
+async function refresh() {
+  // Don't redraw under someone typing or choosing from a menu.
+  const busy = document.activeElement && ["TEXTAREA", "INPUT", "SELECT"].includes(document.activeElement.tagName) && document.activeElement.id !== "search";
+  if (busy || document.querySelector(".menu.open")) return;
+  try { data = await call("/api/state"); render(); } catch (e) { toast(e.message); }
+}
+
+document.addEventListener("click", async (e) => {
+  const el = e.target.closest("button");
+  document.querySelectorAll(".menu.open").forEach((m) => { if (!m.contains(e.target)) m.classList.remove("open"); });
+  if (!el) return;
+  if (el.dataset.menu !== undefined) { el.parentElement.classList.toggle("open"); return; }
+  if (el.dataset.shots) {
+    el.disabled = true;
+    try { toast((await call("/api/screenshots", {item_ids: [+el.dataset.shots]})).message); }
+    catch (err) { toast(err.message); }
+    el.disabled = false;
+    return;
+  }
+  if (el.dataset.more) { const id = +el.dataset.more; open.has(id) ? open.delete(id) : open.add(id); render(); return; }
+  if (el.dataset.reply) {
+    const id = +el.dataset.reply; replying.has(id) ? replying.delete(id) : replying.add(id); render();
+    if (replying.has(id)) $(`reply-${id}`).querySelector("textarea").focus();
+    return;
+  }
+  if (el.dataset.act) {
+    const id = +el.dataset.id, verb = el.dataset.act, body = {};
+    if (verb === "answer" || verb === "question") {
+      body.text = (drafts.get(id) || "").trim();
+      if (!body.text) { toast(verb === "answer" ? "Write an answer first." : "Write your question first."); return; }
+    }
+    if (verb === "defer") body.until = el.dataset.until;
+    if (verb === "drop") {
+      const reason = prompt(`Drop #${id}? Its session is told. Reason (optional):`);
+      if (reason === null) return;
+      body.text = reason;
+    }
+    el.disabled = true;
+    try {
+      data = await call(`/api/items/${id}/${verb}`, body);
+      drafts.delete(id); replying.delete(id);
+      render();
+      toast({answer: `Sent to ${data.item.owner_name}.`, question: `Asked ${data.item.owner_name}; the reply comes back here.`, accept: `Accepted #${id}.`, ack: `Closed #${id}.`, done: `Told ${data.item.owner_name} it's done.`, defer: `Deferred #${id}.`, drop: `Dropped #${id}.`}[verb]);
+    } catch (err) { toast(err.message); el.disabled = false; }
+  }
+});
+
+document.addEventListener("input", (e) => {
+  if (e.target.dataset.draft) drafts.set(+e.target.dataset.draft, e.target.value);
+  if (e.target.id === "search") filter();
+});
+
+$("ask-toggle").onclick = () => { $("ask-box").classList.toggle("open"); $("ask-text").focus(); };
+$("ask-cancel").onclick = () => $("ask-box").classList.remove("open");
+$("ask-box").onsubmit = async (e) => {
+  e.preventDefault();
+  const text = $("ask-text").value.trim();
+  if (!text) return;
+  try {
+    data = await call("/api/ask", {text, to: $("ask-to").value, instruction: $("ask-instruction").checked});
+    $("ask-text").value = ""; $("ask-instruction").checked = false; $("ask-box").classList.remove("open");
+    render(); toast(`Filed #${data.item.id} for ${data.item.owner_name}.`);
+  } catch (err) { toast(err.message); }
+};
+
+// --- Voice ---------------------------------------------------------------
+// The agent runs in ElevenLabs' cloud (speech-to-text -> Claude -> Eleven v4). Its tools run here, in the
+// browser, and reach the agenda over the tailnet. Replies that arrive during the call on items Nick asked
+// about are passed to it as "AGENDA UPDATE" context, which it raises at the next pause.
+const SDK = "https://cdn.jsdelivr.net/npm/@elevenlabs/client/+esm";
+let session = null, muted = false, watermark = 0;
+const askedThisCall = new Set();
+
+async function act(id, verb, body = {}) {
+  data = await call(`/api/items/${id}/${verb}`, body);
+  render();
+  return data.item;
+}
+const ok = (message) => ({ok: true, message});
+const safely = (fn) => async (args = {}) => {
+  try { return await fn(args); } catch (err) { return {ok: false, error: err.message}; }
+};
+const voiceTools = {
+  get_item: safely(async ({item_id}) => (await call(`/api/voice/items/${item_id}`)).text),
+  show_item: safely(async ({item_id}) => {
+    speaking = +item_id; render();
+    document.querySelector(`[data-item="${item_id}"]`)?.scrollIntoView({behavior: "smooth", block: "center"});
+    return ok(`showing #${item_id}`);
+  }),
+  refresh_agenda: safely(async () => (await call("/api/voice/overview")).text),
+  accept_recommendation: safely(async ({item_id}) => {
+    const item = await act(item_id, "accept");
+    return ok(`Recorded on #${item_id}: going with the recommendation. It's with ${item.owner_name} now.`);
+  }),
+  accept_recommendations: safely(async ({item_ids}) => {
+    const done = [], failed = [];
+    for (const id of item_ids || []) {
+      try { await act(id, "accept"); done.push(`#${id}`); } catch (err) { failed.push(`#${id} (${err.message})`); }
+    }
+    return {ok: !failed.length, message: `Approved ${done.join(", ") || "none"}.` + (failed.length ? ` Not recorded: ${failed.join("; ")}.` : "")};
+  }),
+  send_screenshots: safely(async ({item_ids}) => ok((await call("/api/screenshots", {item_ids})).message)),
+  record_answer: safely(async ({item_id, answer}) => {
+    const item = await act(item_id, "answer", {text: answer});
+    return ok(`Recorded Nick's answer on #${item_id}; it's with ${item.owner_name} now.`);
+  }),
+  ask_owner: safely(async ({item_id, question}) => {
+    const item = await act(item_id, "question", {text: question});
+    askedThisCall.add(+item_id);
+    return ok(`Asked ${item.owner_name}. Their reply will arrive as an AGENDA UPDATE if it comes during the call.`);
+  }),
+  mark_heard: safely(async ({item_id}) => { await act(item_id, "ack"); return ok(`#${item_id} closed as heard.`); }),
+  mark_done: safely(async ({item_id, note}) => {
+    const item = await act(item_id, "done", {text: note || ""});
+    return ok(`Told ${item.owner_name} Nick did #${item_id}.`);
+  }),
+  defer_item: safely(async ({item_id, until}) => { await act(item_id, "defer", {until}); return ok(`#${item_id} deferred (${until}).`); }),
+  drop_item: safely(async ({item_id, reason}) => {
+    const item = await act(item_id, "drop", {text: reason || ""});
+    return ok(`#${item_id} dropped; ${item.owner_name} is told.`);
+  }),
+  ask_session: safely(async ({text, to, instruction}) => {
+    data = await call("/api/ask", {text, to: to || $("ask-to").value, instruction: !!instruction});
+    render();
+    askedThisCall.add(data.item.id);
+    return ok(`Filed #${data.item.id} for ${data.item.owner_name}.`);
+  }),
+};
+
+function setCallState(text, mode) {
+  const el = $("call-state");
+  el.textContent = text;
+  el.className = `state ${mode || ""}`;
+}
+
+async function startCall() {
+  $("talk").disabled = true;
+  $("callbar").classList.add("open");
+  document.querySelector("main").classList.add("in-call");
+  setCallState("Connecting…");
+  try {
+    const [{Conversation}, start] = await Promise.all([import(SDK), call("/api/voice/start")]);
+    watermark = start.watermark;
+    askedThisCall.clear();
+    session = await Conversation.startSession({
+      conversationToken: start.token,
+      connectionType: "webrtc",
+      dynamicVariables: start.dynamic_variables,
+      clientTools: voiceTools,
+      onConnect: () => setCallState("Listening", "listening"),
+      onDisconnect: () => endCall(false),
+      onError: (err) => toast(`Call error: ${err?.message || err}`),
+      onModeChange: ({mode}) => setCallState(mode === "speaking" ? "Speaking" : "Listening", mode),
+      onMessage: ({message, source}) => {
+        // v4 delivery tags like [neutral] steer the voice; they aren't words, so don't show them.
+        const words = message.replace(/\[[a-z][a-z ,'-]{0,40}\]\s*/gi, "");
+        $("call-said").innerHTML = `<b>${source === "user" ? "You" : "Agenda"}:</b> ${esc(words)}`;
+      },
+    });
+    window.agendaCall = session;  // handy for testing from the console
+  } catch (err) {
+    toast(`Couldn't start the call: ${err.message}`);
+    endCall(false);
+  }
+}
+
+async function endCall(hangUp = true) {
+  const current = session;
+  session = null;
+  if (hangUp && current) { try { await current.endSession(); } catch (err) { /* already gone */ } }
+  $("talk").disabled = false;
+  $("callbar").classList.remove("open");
+  document.querySelector("main").classList.remove("in-call");
+  speaking = null;
+  render();
+}
+
+// During a call, pass replies to Nick's questions to the agent as they land.
+async function relayReplies() {
+  if (!session || !askedThisCall.size) return;
+  let state;
+  try { state = await call("/api/state"); } catch (err) { return; }
+  const items = [...state.queue, ...state.deferred, ...state.owed, ...state.history];
+  for (const item of items) {
+    if (!askedThisCall.has(item.id)) continue;
+    for (const m of item.messages) {
+      if (m.id <= watermark || m.author !== item.owner) continue;
+      session.sendContextualUpdate(`AGENDA UPDATE on #${item.id} ("${item.title}") from ${item.owner_name}: ${m.body}`);
+    }
+  }
+  watermark = Math.max(watermark, ...items.flatMap((i) => i.messages.map((m) => m.id)));
+  data = state; render();
+}
+
+$("talk").onclick = startCall;
+$("call-end").onclick = () => endCall(true);
+$("call-mute").onclick = () => {
+  if (!session) return;
+  muted = !muted;
+  session.setMicMuted(muted);
+  $("call-mute").textContent = muted ? "Unmute" : "Mute";
+};
+setInterval(relayReplies, 5000);
+
+refresh();
+setInterval(refresh, 8000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+</script>
+</body>
+</html>

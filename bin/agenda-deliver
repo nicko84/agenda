@@ -1,0 +1,6 @@
+#!/bin/bash
+# Nudge idle Claude Code sessions in herdr that have agenda news. Run by deploy/agenda-deliver.service.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+cd "$ROOT"
+exec /usr/bin/python3 -m agenda.deliver "$@"

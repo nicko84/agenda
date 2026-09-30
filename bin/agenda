@@ -1,0 +1,12 @@
+#!/usr/bin/python3
+"""Entry point; symlink onto PATH. System Python on purpose: the orchestrator runs from ~,
+where mise pins no interpreter, and this must also work from hooks."""
+
+import os
+import sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), ".."))
+
+from agenda.cli import main  # noqa: E402
+
+sys.exit(main())
